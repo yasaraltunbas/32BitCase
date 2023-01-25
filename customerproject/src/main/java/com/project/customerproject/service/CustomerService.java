@@ -3,6 +3,9 @@ package com.project.customerproject.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,9 +15,11 @@ import com.project.customerproject.entity.Customer;
 import com.project.customerproject.repository.CustomerJpaRepository;
 import com.project.customerproject.result.DataResult;
 import com.project.customerproject.result.ErrorDataResult;
+import com.project.customerproject.result.ErrorResult;
 import com.project.customerproject.result.Result;
 import com.project.customerproject.result.SuccessDataResult;
 import com.project.customerproject.result.SuccessResult;
+
 
 
 @Service
@@ -50,19 +55,39 @@ public class CustomerService {
 		return new SuccessResult("Müsteri Eklendi.");
 	}
 
-//	@DeleteMapping("/{productId}/{clientId}")
-//	
-//	public void deleteCustomerById(@PathVariable int id) {
-//		
-//		Optional<Customer> product = customerJpaRepository.findById(id);
-//		if(product.isPresent()) {
-//			Customer foundProduct = product.get();
-//			
-//	customerJpaRepository.deleteById(id);
-//	
-//		}
-//		
-//	}
+	public Result deleteCustomerById( int id) {
+
+        Optional<Customer> product = customerJpaRepository.findById(id);
+        if(product.isPresent()) {
+
+            customerJpaRepository.deleteById(id);
+        }
+        boolean isDeleted = !customerJpaRepository.existsById(id);
+
+        if (isDeleted){
+            return new SuccessResult(""+ id + " id'li müşteri silindi.");
+        }
+
+        return new ErrorResult(""+ id + " id'li müşteri silinirken hata oluştu.");
+    }
+
+	public DataResult<List<Customer>> getAllByPage(int pageNo, int pageSize) {
+		Pageable pageable = PageRequest.of(pageNo-1, pageSize);
+		
+		return new SuccessDataResult<List<Customer>>
+		(this.customerJpaRepository.findAll(pageable).getContent(), "Başarılı");
+	}
+
+	public DataResult<List<Customer>> getAllSortedDesc() {
+		Sort sort = Sort.by(Sort.Direction.DESC,"customerName");
+		return new SuccessDataResult<List<Customer>>
+		(this.customerJpaRepository.findAll(sort),"Başarılı");
+	}
+
+	public DataResult<List<Customer>> getAllSortedAsc() {
+		Sort sort = Sort.by(Sort.Direction.ASC,"customerName");
+		return new SuccessDataResult<List<Customer>>
+		(this.customerJpaRepository.findAll(sort),"Başarılı");	}
 
 	
 }
